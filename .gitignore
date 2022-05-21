@@ -131,3 +131,4 @@ dmypy.json
 # local files
 American Sign Language Letters.v1-v1.tfrecord/
 American Sign Language Letters.v1-v1.tensorflow/
+/data_store

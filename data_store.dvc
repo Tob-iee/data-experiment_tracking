@@ -1,0 +1,5 @@
+outs:
+- md5: 4bb96dd0200133379f19ac52946175c8.dir
+  size: 22763606
+  nfiles: 1733
+  path: data_store
