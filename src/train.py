@@ -1,7 +1,6 @@
 import os
 import time
-import numpy as np
-import matplotlib.pyplot as plt
+import argparse
 import tensorflow as tf
 import mlflow
 import mlflow.tensorflow
@@ -9,35 +8,72 @@ from mlflow.tracking import MlflowClient
 print(mlflow.__version__)
 
 tf.get_logger().setLevel('INFO')
-
-
-# Set MLflow tracking remote server using Dagshub Mlflow server URI
-mlflow.set_tracking_uri(f'https://dagshub.com/{DAGSHUB_REPO_OWNER}/{DAGSHUB_REPO_NAME}.mlflow')
-
-
-
 strategy = tf.distribute.get_strategy()
 print("Number of replicas:", strategy.num_replicas_in_sync)
 
+# Initialize the parser
+parser = argparse.ArgumentParser(description="Hand_sign_trainer")
 
-ARTIFACTS_PATH = "./data_store/artifacts"
-EXPERIMENT_NAME = "Hand_Signs_2"
-SET_ARTIFACTS_LOCATION ="/content/MLflow_TF-serving/data_store/artifacts/"
+# Add the parameters positional/optional
+parser.add_argument("-dp",
+                     dest= "datapath",
+                     help="path directory to the training data",
+                     default="./data_store/data/American Sign Language Letters.v1-v1.tfrecord/",
+                     type=str)
+parser.add_argument("-s",
+                    dest= "datasplit",
+                    nargs='+',
+                    help="the particular data split to be trained on(enter a set of split as training and validation set",
+                    default=["train", "valid"],
+                    type=list)
+parser.add_argument("-n",
+                    dest= "tfrec",
+                    help="the name for the tfrecord files",
+                    default="Letters",
+                    type=str)
+parser.add_argument("-ap",
+                    dest= "arti",
+                    help="set location to store model artifact",
+                    default="./data_store/artifacts",
+                    type=str)
+parser.add_argument("-en",
+                    dest= "exp_name",
+                    help="defines the experiment name to start",
+                    default="Hand_Signs",
+                    type=str)
+parser.add_argument("-lt",
+                    dest= "local_train",
+                    help="to specify if thet training with be lrun locally",
+                    required=True,
+                    default=False,
+                    type=bool)
 
-# Load the data
+# parse the arguments
+args = parser.parse_args()
+
+local_training = args.local_train
+
+if local_training:
+  # Set MLflow tracking remote server using Dagshub Mlflow server URI
+  mlflow.set_tracking_uri("https://dagshub.com/Nwoke/Mlflow-Dagshub_Exp-Tracking.mlflow")
+  os.environ['MLFLOW_TRACKING_USERNAME'] = 'Nwoke'
+  os.environ['MLFLOW_TRACKING_PASSWORD'] = 'c56874fb5ff5539f07779ff6ce29ef8419e6a18e'
+
+
+ARTIFACTS_PATH = args.arti
+EXPERIMENT_NAME = args.exp_name
+# SET_ARTIFACTS_LOCATION ="./data_store/artifacts/"
 
 AUTOTUNE = tf.data.AUTOTUNE
 BATCH_SIZE = 32
 
-FILENAMES_PATH = "/content/MLflow_TF-serving/data_store/data/American Sign Language Letters.v1-v1.tfrecord/"
+FILENAMES_PATH = args.datapath
 
-TRAINING_FILENAMES =  FILENAMES_PATH + "train/Letters.tfrecords"
-VALID_FILENAMES = FILENAMES_PATH + "valid/Letters.tfrecords"
-TEST_FILENAMES = FILENAMES_PATH + "test/Letters.tfrecords"
+TRAINING_FILENAMES =  FILENAMES_PATH + args.datasplit[0] + "/Letters.tfrecords"
+VALID_FILENAMES = FILENAMES_PATH + args.datasplit[1] + "/Letters.tfrecords"
 
-print("Train TFRecord Files:", len(TRAINING_FILENAMES))
-print("Validation TFRecord Files:", len(VALID_FILENAMES))
-print("Test TFRecord Files:", len(TEST_FILENAMES))
+print("Train TFRecord Files:", TRAINING_FILENAMES)
+print("Validation TFRecord Files:", VALID_FILENAMES)
 
 
 
@@ -136,82 +172,72 @@ def get_cnn():
   tf.keras.layers.Dense(26,'softmax')
   ])
 
-  # opt = SGD(learning_rate=learning_rate)
   optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
   model.compile(loss= tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                 optimizer=optimizer,
                 metrics=[tf.keras.metrics.SparseCategoricalAccuracy()]
                 )
-  # model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
   return model
 
 
-tfr_dataset = get_dataset(TRAINING_FILENAMES)
-print(tfr_dataset)
-
-tfr_testdata = get_dataset(VALID_FILENAMES)
-print(tfr_testdata)
-
-
-model = get_cnn()
-model.summary()
-
-
-
-
 def main():
 
-  print(mlflow.tracking.get_tracking_uri())
-  print(mlflow.get_artifact_uri())
+  tfr_dataset = get_dataset(TRAINING_FILENAMES)
+  print(tfr_dataset)
+
+  tfr_testdata = get_dataset(VALID_FILENAMES)
+  print(tfr_testdata)
+
+
+  model = get_cnn()
+  # model.summary()
+
+  print(f"The tracking uri is: {mlflow.tracking.get_tracking_uri()}")
 
   client = MlflowClient()
-  experiment = client.get_experiment_by_name("Hand_Signs_x")
+  # client_list = client.list_experiments()
+  experiment = client.get_experiment_by_name(EXPERIMENT_NAME)
+  print(experiment)
+
+  if experiment.lifecycle_stage == "active":
+    # Set experiment
+    mlflow.set_experiment(experiment_name=EXPERIMENT_NAME)
+    experiment = client.get_experiment_by_name(EXPERIMENT_NAME)
+    print("Name: {}".format(experiment.name))
+    print("Experiment_id: {}".format(experiment.experiment_id))
+    print("Artifact Location: {}".format(experiment.artifact_location))
+    print("Tags: {}".format(experiment.tags))
+    print("Lifecycle_stage: {}".format(experiment.lifecycle_stage))
 
 
-  # if experiment.name == EXPERIMENT_NAME:
-  # Set experiment
-  # mlflow.set_experiment(experiment_name="Hand_Signs_2")
-  experiment = client.get_experiment_by_name("Hand_Signs_2")
-  print("Name: {}".format(experiment.name))
-  print("Experiment_id: {}".format(experiment.experiment_id))
-  print("Artifact Location: {}".format(experiment.artifact_location))
-  print("Tags: {}".format(experiment.tags))
-  print("Lifecycle_stage: {}".format(experiment.lifecycle_stage))
+  elif experiment == None:
+    # create and set experiment
+    experiment_new = mlflow.create_experiment(EXPERIMENT_NAME, artifact_location=ARTIFACTS_PATH)
+    client_set_exp = client.set_experiment_tag(experiment_new, "CV.framework", "Tensorflow_CV")
+    experiment = client_set_exp.get_experiment(experiment_new)
+    print("Name: {}".format(experiment.name))
+    print("Experiment_id: {}".format(experiment.experiment_id))
+    print("Artifact Location: {}".format(experiment.artifact_location))
+    print("Tags: {}".format(experiment.tags))
+    print("Lifecycle_stage: {}".format(experiment.lifecycle_stage))
 
-
-  # else:
-  # create and set experiment
-  # experiment_id = mlflow.create_experiment(EXPERIMENT_NAME,
-  #                                          artifact_location=SET_ARTIFACTS_LOCATION)
-  # print(experiment_id)
-
-
-  # client.set_experiment_tag(experiment_id, "CV.framework", "Tensorflow_CV")
-  # experiment = client.get_experiment(experiment_id)
-  # print("Name: {}".format(experiment.name))
-  # print("Experiment_id: {}".format(experiment.experiment_id))
-  # print("Artifact Location: {}".format(experiment.artifact_location))
-  # print("Tags: {}".format(experiment.tags))
-  # print("Lifecycle_stage: {}".format(experiment.lifecycle_stage))
+  else:
+    print("Please check your experiment name it might have been deleted")
 
 
   # start experiment tracking runs
-  with mlflow.start_run(experiment_id=experiment.experiment_id, run_name="test_artifact store"):
+  with mlflow.start_run(experiment_id=experiment.experiment_id):
+
+    print(f"The artifacts uri is: {mlflow.get_artifact_uri()}")
+
     run = mlflow.active_run()
-    print("run_id: {}; status: {}".format(run.info.run_id, run.info.status))
-
-    mlflow.tensorflow.autolog()
-
+    print(f"run_id: {run.info.run_id}; status: {run.info.status}")
 
     start_training = time.time()
-
     history = model.fit(tfr_dataset,
-              # steps_per_epoch=1513/BATCH_SIZE,
               epochs=30, verbose=1)
     end_training = time.time()
-
-    tf.keras.models.save_model(model, "./model")
 
     training_time = end_training - start_training
 
@@ -220,21 +246,13 @@ def main():
     mlflow.log_metric('batchsize', BATCH_SIZE)
     mlflow.log_metric('training_accuracy', history.history['sparse_categorical_accuracy'][-1])
     mlflow.log_metric('training_loss', history.history['loss'][-1])
-    # mlflow.log_metric('precision', history.history['precision'])
-    # mlflow.log_metric('recall', history.history['recall'])
-
     mlflow.log_metric('training_time', training_time)
-    # mlflow.log_artifact("./model", artifact_path=ARTIFACTS_PATH)
-
-
+    mlflow.log_artifact("./model", artifact_path=ARTIFACTS_PATH)
 
     tfr_testdata = get_dataset(VALID_FILENAMES)
-    steps_per_epoch = 145/BATCH_SIZE
 
     start_evaluating = time.time()
-    val_loss, val_accuracy = model.evaluate(tfr_testdata,
-      # steps_per_epoch=steps_per_epoch,
-      )
+    val_loss, val_accuracy = model.evaluate(tfr_testdata)
 
     end_evaluating = time.time()
     evaluating_time = end_evaluating - start_evaluating
@@ -243,18 +261,17 @@ def main():
     mlflow.log_metric('validation_accuracy', val_accuracy)
     mlflow.log_metric('validation_loss', val_loss)
     mlflow.log_metric('evaluating_time', evaluating_time)
-
+    mlflow.log_artifact("./model", artifact_path=ARTIFACTS_PATH)
 
     run = mlflow.get_run(run.info.run_id)
-    print("run_id: {}; status: {}".format(run.info.run_id, run.info.status))
+    print(f"run_id: {run.info.run_id}; status: {run.info.status}")
     print("--")
 
   # Check for any active runs
-  print("Active run: {}".format(mlflow.active_run()))
+  print(f"Active run: {mlflow.active_run()}")
 
-  return "TRAINING COMPLETED!!!"
 
-# !dvc add data_store/
+# !dvc add data_store/artifacts/{runid}
 
 # !git add data_store.dvc
 
@@ -265,5 +282,4 @@ def main():
 # !git push
 
 if __name__ ==  '__main__':
-    # pass
-    main()
+  main()

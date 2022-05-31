@@ -1,13 +1,10 @@
 # import the necessary packages
 import os
 import argparse
-# import csv, json
 import pandas as pd
-# import string
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
 tf.get_logger().setLevel('INFO')
-# from functools import partial
 
 
 # FILENAMES_PATH = "./data_store/data/American Sign Language Letters.v1-v1.tensorflow/"
@@ -167,4 +164,3 @@ def main():
 
 if __name__ ==  '__main__':
     main()
-    # pass
