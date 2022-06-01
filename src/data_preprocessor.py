@@ -7,8 +7,6 @@ import tensorflow as tf
 tf.get_logger().setLevel('INFO')
 
 
-# FILENAMES_PATH = "./data_store/data/American Sign Language Letters.v1-v1.tensorflow/"
-
 # Initialize the parser
 parser = argparse.ArgumentParser(description="Data Preprocessor")
 
@@ -41,25 +39,6 @@ parser.add_argument("-o",
 # parse the arguments
 args = parser.parse_args()
 
-# output_path = args.output_path
-# output_path = "./data_store/data_x/American Sign Language Letters.v1-v1.tfrecord"
-# TRAINING_FILENAMES =  FILENAMES_PATH + "train/"
-# VALID_FILENAMES = FILENAMES_PATH + "valid/"
-# TEST_FILENAMES = FILENAMES_PATH + "test/"
-
-
-# TRAINING_FILENAMES =  args.datapath + "train/"
-# VALID_FILENAMES = args.datapath + "valid/"
-# TEST_FILENAMES = args.datapath + "test/"
-
-# print("Train TFRecord Files:", len(TRAINING_FILENAMES))
-# print("Validation TFRecord Files:", len(VALID_FILENAMES))
-# print("Test TFRecord Files:", len(TEST_FILENAMES))
-
-# datasplits = [] args.datasplit
-# for split in datasplits:
-
-# FILE_PATH = args.datapath + args.datasplit
 
 def image_feature(value):
     """Returns a bytes_list from a string / byte."""
@@ -164,3 +143,4 @@ def main():
 
 if __name__ ==  '__main__':
     main()
+    # python src/data_preprocessor.py -s train test valid -o "./data_store/data_x/American Sign Language Letters.v1-v1.tfrecord"

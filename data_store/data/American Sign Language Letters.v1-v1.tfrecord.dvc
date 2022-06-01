@@ -1,0 +1,5 @@
+outs:
+- md5: cda51f85c05552d256b7d8f22a2dea5e.dir
+  size: 42582792
+  nfiles: 7
+  path: American Sign Language Letters.v1-v1.tfrecord

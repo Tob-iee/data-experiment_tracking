@@ -128,7 +128,3 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# local files
-American Sign Language Letters.v1-v1.tfrecord/
-American Sign Language Letters.v1-v1.tensorflow/
-/data_store
