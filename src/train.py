@@ -57,7 +57,7 @@ if local_training:
   # Set MLflow tracking remote server using Dagshub Mlflow server URI
   mlflow.set_tracking_uri("https://dagshub.com/Nwoke/data_model_experiment-tracking.dvc")
   os.environ['MLFLOW_TRACKING_USERNAME'] = 'Nwoke'
-  os.environ['MLFLOW_TRACKING_PASSWORD'] = 'c56874fb5ff5539f07779ff6ce29ef8419e6a18e'
+  os.environ['MLFLOW_TRACKING_PASSWORD'] = 'your dagshub token'
 
 
 ARTIFACTS_PATH = args.arti
