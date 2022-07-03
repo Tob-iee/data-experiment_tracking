@@ -1,16 +1,16 @@
 stages:
   ELT:
-    cmd: python src/data_preprocessor.py -s train test valid -o "./data_store/data/American
+    cmd: python ./src/data_preprocessor.py -s train test valid -o "./data_store/data/American
       Sign Language Letters.v1-v1.tfrecord"
     deps:
     - ./data_store/data/American Sign Language Letters.v1-v1.tensorflow/
-    - src/data_preprocessor.py
+    - ./src/data_preprocessor.py
     outs:
     - ./data_store/data/American Sign Language Letters.v1-v1.tfrecord
   feature_tranform-train:
-    cmd: python src/train.py
+    cmd: python ./src/train.py -lt False
     deps:
     - ./data_store/data/American Sign Language Letters.v1-v1.tfrecord/
-    - src/train.py
+    - ./src/train.py
     outs:
-    - data_store/artifacts/
+    - ./data_store/artifacts/

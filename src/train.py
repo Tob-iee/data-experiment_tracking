@@ -43,9 +43,9 @@ parser.add_argument("-en",
                     type=str)
 parser.add_argument("-lt",
                     dest= "local_train",
-                    help="to specify if thet training with be lrun locally",
+                    help="to specify if thet training with be run locally",
                     required=True,
-                    default=False,
+                    default="False",
                     type=bool)
 
 # parse the arguments
@@ -53,7 +53,7 @@ args = parser.parse_args()
 
 local_training = args.local_train
 
-if local_training:
+if local_training == "True":
   # Set MLflow tracking remote server using Dagshub Mlflow server URI
   mlflow.set_tracking_uri("https://dagshub.com/Nwoke/data_model_experiment-tracking.dvc")
   os.environ['MLFLOW_TRACKING_USERNAME'] = 'Nwoke'
