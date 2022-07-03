@@ -1,0 +1,9 @@
+stages:
+  ELT:
+    cmd: python src/data_preprocessor.py -s train test valid -o "./data_store/data/American
+      Sign Language Letters.v1-v1.tfrecord"
+    deps:
+    - ./data_store/data/American Sign Language Letters.v1-v1.tensorflow/
+    - src/data_preprocessor.py
+    outs:
+    - ./data_store/data/American Sign Language Letters.v1-v1.tfrecord
