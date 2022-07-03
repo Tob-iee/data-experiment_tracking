@@ -53,12 +53,6 @@ args = parser.parse_args()
 
 local_training = args.local_train
 
-if local_training == "True":
-  # Set MLflow tracking remote server using Dagshub Mlflow server URI
-  mlflow.set_tracking_uri("https://dagshub.com/Nwoke/data_model_experiment-tracking.dvc")
-  os.environ['MLFLOW_TRACKING_USERNAME'] = 'Nwoke'
-  os.environ['MLFLOW_TRACKING_PASSWORD'] = 'your dagshub token'
-
 
 ARTIFACTS_PATH = args.arti
 EXPERIMENT_NAME = args.exp_name
@@ -183,6 +177,12 @@ def get_cnn():
 
 def main():
 
+  if local_training == "True":
+  # Set MLflow tracking remote server using Dagshub Mlflow server URI
+    mlflow.set_tracking_uri("http://0.0.0.0:5000")
+    # os.environ['MLFLOW_TRACKING_USERNAME'] = 'Nwoke'
+    # os.environ['MLFLOW_TRACKING_PASSWORD'] = 'your dagshub token'
+
   tfr_dataset = get_dataset(TRAINING_FILENAMES)
   print(tfr_dataset)
 
@@ -191,7 +191,7 @@ def main():
 
 
   model = get_cnn()
-  # model.summary()
+  model.summary()
 
   print(f"The tracking uri is: {mlflow.tracking.get_tracking_uri()}")
 
