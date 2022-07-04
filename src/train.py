@@ -177,9 +177,6 @@ def main():
   tfr_testdata = get_dataset(VALID_FILENAMES)
   print(tfr_testdata)
 
-  model = get_cnn()
-  model.summary()
-
   print(f"The tracking uri is: {mlflow.get_tracking_uri()}")
 
   client = MlflowClient()
@@ -215,13 +212,18 @@ def main():
     print("Please check your experiment name it might have been deleted")
 
 
+
+  model = get_cnn()
+  model.summary()
+
+  mlflow.tensorflow.autolog(every_n_iter=2)
+
   # start experiment tracking runs
   with mlflow.start_run(experiment_id=experiment.experiment_id):
 
     run = mlflow.active_run()
     print(f"run_id: {run.info.run_id}; status: {run.info.status}")
 
-    mlflow.tensorflow.autolog(every_n_iter=2)
     start_training = time.time()
     history = model.fit(tfr_dataset,
               epochs=30, verbose=1)
