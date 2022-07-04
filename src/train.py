@@ -184,12 +184,10 @@ def main():
   search_exp = client.get_experiment_by_name(EXPERIMENT_NAME)
   print(client_list)
 
-  artifact_uri = mlflow.get_artifact_uri()
-  print(f"The artifacts uri is: {artifact_uri}")
 
   if search_exp == None:
     # create and set experiment
-    experiment_new = mlflow.create_experiment(EXPERIMENT_NAME, artifact_location=artifact_uri)
+    experiment_new = mlflow.create_experiment(EXPERIMENT_NAME)
     client.set_experiment_tag(experiment_new, "CV.framework", "Tensorflow_CV")
     experiment = client.get_experiment(experiment_new)
     print("Name: {}".format(experiment.name))
@@ -211,6 +209,8 @@ def main():
   else:
     print("Please check your experiment name it might have been deleted")
 
+  artifact_uri = mlflow.get_artifact_uri()
+  print(f"The artifacts uri is: {artifact_uri}")
 
   model = get_cnn()
   model.summary()
