@@ -31,14 +31,19 @@ parser.add_argument("-n",
                     help="the name for the tfrecord files",
                     default="letters",
                     type=str)
+parser.add_argument("-ap",
+                    dest= "arti",
+                    help="set location to store model artifact",
+                    default="./data_store/artifacts",
+                    type=str)
 parser.add_argument("-en",
                     dest= "exp_name",
                     help="defines the experiment name to start",
                     default="Hand_Signs",
                     type=str)
-parser.add_argument("-lt",
-                    dest= "local_train",
-                    help="to specify if thet training with be run locally",
+parser.add_argument("-dt",
+                    dest= "dagshub_train",
+                    help="to specify if thet training with be run on dagshub",
                     required=True,
                     default="False",
                     type=bool)
@@ -51,7 +56,8 @@ BATCH_SIZE = 32
 
 FILENAMES_PATH = args.datapath
 EXPERIMENT_NAME = args.exp_name
-LOCAL_TRAINING = args.local_train
+ARTIFACTS_PATH = args.arti
+DAGSHUB_TRAINING = args.dagshub_train
 
 TRAINING_FILENAMES =  FILENAMES_PATH + args.datasplit[0] + "/letters.tfrecords"
 VALID_FILENAMES = FILENAMES_PATH + args.datasplit[1] + "/letters.tfrecords"
@@ -167,15 +173,21 @@ def get_cnn():
 
 def main():
 
-  if LOCAL_TRAINING == "True":
-  # Set MLflow tracking remote server using Dagshub Mlflow server URI
-    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+  # if DAGSHUB_TRAINING == "True":
+  # # Set MLflow tracking remote server using Dagshub Mlflow server URI
+  #   os.environ['MLFLOW_TRACKING_USERNAME'] = DAGSHUB_REPO_OWNER
+  #   os.environ['MLFLOW_TRACKING_PASSWORD'] = DAGSHUB_REPO_NAME
+  #   mlflow.set_tracking_uri("https://dagshub.com/{DAGSHUB_REPO_OWNER}/{DAGSHUB_REPO_NAME}.mlflow")
 
   tfr_dataset = get_dataset(TRAINING_FILENAMES)
   print(tfr_dataset)
 
   tfr_testdata = get_dataset(VALID_FILENAMES)
   print(tfr_testdata)
+
+  if not os.path.exists(args.arti):
+    # Create artifacts directory because it does not exist
+    os.makedirs(args.arti)
 
   print(f"The tracking uri is: {mlflow.get_tracking_uri()}")
 
@@ -187,7 +199,7 @@ def main():
 
   if search_exp == None:
     # create and set experiment
-    experiment_new = mlflow.create_experiment(EXPERIMENT_NAME)
+    experiment_new = mlflow.create_experiment(EXPERIMENT_NAME,artifact_location=ARTIFACTS_PATH)
     client.set_experiment_tag(experiment_new, "CV.framework", "Tensorflow_CV")
     experiment = client.get_experiment(experiment_new)
     print("Name: {}".format(experiment.name))
@@ -218,44 +230,44 @@ def main():
   mlflow.tensorflow.autolog(every_n_iter=2)
 
   # start experiment tracking runs
-  with mlflow.start_run(experiment_id=experiment.experiment_id):
+  # with mlflow.start_run(experiment_id=experiment.experiment_id):
 
-    run = mlflow.active_run()
-    print(f"run_id: {run.info.run_id}; status: {run.info.status}")
-
-
-    start_training = time.time()
-    history = model.fit(tfr_dataset,
-              epochs=30, verbose=1)
-    end_training = time.time()
-
-    training_time = end_training - start_training
-
-    mlflow.log_param("learning_rate", 0.0001)
-    mlflow.log_param("optimizer", "Adam")
-    mlflow.log_metric('batchsize', BATCH_SIZE)
-    mlflow.log_metric('training_accuracy', history.history['sparse_categorical_accuracy'][-1])
-    mlflow.log_metric('training_loss', history.history['loss'][-1])
-    mlflow.log_metric('training_time', training_time)
-    # mlflow.log_artifacts(model, artifact_path=artifact_uri)
-
-    tfr_testdata = get_dataset(VALID_FILENAMES)
-
-    start_evaluating = time.time()
-    val_loss, val_accuracy = model.evaluate(tfr_testdata)
-
-    end_evaluating = time.time()
-    evaluating_time = end_evaluating - start_evaluating
+  run = mlflow.active_run()
+  print(f"run_id: {run.info.run_id}; status: {run.info.status}")
 
 
-    mlflow.log_metric('validation_accuracy', val_accuracy)
-    mlflow.log_metric('validation_loss', val_loss)
-    mlflow.log_metric('evaluating_time', evaluating_time)
+  start_training = time.time()
+  history = model.fit(tfr_dataset,
+            epochs=30, verbose=1)
+  end_training = time.time()
 
-    run = mlflow.get_run(run.info.run_id)
-    print(f"run_id: {run.info.run_id}; status: {run.info.status}")
-    print("--")
-    mlflow.end_run()
+  training_time = end_training - start_training
+
+  mlflow.log_param("learning_rate", 0.0001)
+  mlflow.log_param("optimizer", "Adam")
+  mlflow.log_metric('batchsize', BATCH_SIZE)
+  mlflow.log_metric('training_accuracy', history.history['sparse_categorical_accuracy'][-1])
+  mlflow.log_metric('training_loss', history.history['loss'][-1])
+  mlflow.log_metric('training_time', training_time)
+  # mlflow.log_artifacts(model, artifact_path=artifact_uri)
+
+  tfr_testdata = get_dataset(VALID_FILENAMES)
+
+  start_evaluating = time.time()
+  val_loss, val_accuracy = model.evaluate(tfr_testdata)
+
+  end_evaluating = time.time()
+  evaluating_time = end_evaluating - start_evaluating
+
+
+  mlflow.log_metric('validation_accuracy', val_accuracy)
+  mlflow.log_metric('validation_loss', val_loss)
+  mlflow.log_metric('evaluating_time', evaluating_time)
+
+  run = mlflow.get_run(run.info.run_id)
+  print(f"run_id: {run.info.run_id}; status: {run.info.status}")
+  print("--")
+  mlflow.end_run()
 
   # Check for any active runs
   print(f"Active run: {mlflow.active_run()}")
