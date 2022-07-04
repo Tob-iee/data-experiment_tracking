@@ -31,11 +31,6 @@ parser.add_argument("-n",
                     help="the name for the tfrecord files",
                     default="letters",
                     type=str)
-parser.add_argument("-ap",
-                    dest= "arti",
-                    help="set location to store model artifact",
-                    default="./data_store/artifacts",
-                    type=str)
 parser.add_argument("-en",
                     dest= "exp_name",
                     help="defines the experiment name to start",
@@ -51,17 +46,12 @@ parser.add_argument("-lt",
 # parse the arguments
 args = parser.parse_args()
 
-local_training = args.local_train
-
-
-ARTIFACTS_PATH = args.arti
-EXPERIMENT_NAME = args.exp_name
-# SET_ARTIFACTS_LOCATION ="./data_store/artifacts/"
-
 AUTOTUNE = tf.data.AUTOTUNE
 BATCH_SIZE = 32
 
 FILENAMES_PATH = args.datapath
+EXPERIMENT_NAME = args.exp_name
+LOCAL_TRAINING = args.local_train
 
 TRAINING_FILENAMES =  FILENAMES_PATH + args.datasplit[0] + "/letters.tfrecords"
 VALID_FILENAMES = FILENAMES_PATH + args.datasplit[1] + "/letters.tfrecords"
@@ -177,23 +167,15 @@ def get_cnn():
 
 def main():
 
-  if local_training == "True":
+  if LOCAL_TRAINING == "True":
   # Set MLflow tracking remote server using Dagshub Mlflow server URI
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
-    # os.environ['MLFLOW_TRACKING_USERNAME'] = 'Nwoke'
-    # os.environ['MLFLOW_TRACKING_PASSWORD'] = 'your dagshub token'
 
   tfr_dataset = get_dataset(TRAINING_FILENAMES)
   print(tfr_dataset)
 
   tfr_testdata = get_dataset(VALID_FILENAMES)
   print(tfr_testdata)
-
-  # output_dest =os.path.join(output_path, data_split)
-  # output_dest = os.path.dirname(f"{out_path_join}")
-  if not os.path.exists(args.arti):
-      # Create artifacts directory because it does not exist
-      os.makedirs(args.arti)
 
   model = get_cnn()
   model.summary()
@@ -205,10 +187,12 @@ def main():
   search_exp = client.get_experiment_by_name(EXPERIMENT_NAME)
   print(client_list)
 
+  artifact_uri = mlflow.get_artifact_uri()
+  print(f"The artifacts uri is: {artifact_uri()}")
 
   if search_exp == None:
     # create and set experiment
-    experiment_new = mlflow.create_experiment(EXPERIMENT_NAME, artifact_location=ARTIFACTS_PATH)
+    experiment_new = mlflow.create_experiment(EXPERIMENT_NAME, artifact_location=artifact_uri)
     client.set_experiment_tag(experiment_new, "CV.framework", "Tensorflow_CV")
     experiment = client.get_experiment(experiment_new)
     print("Name: {}".format(experiment.name))
@@ -234,11 +218,10 @@ def main():
   # start experiment tracking runs
   with mlflow.start_run(experiment_id=experiment.experiment_id):
 
-    print(f"The artifacts uri is: {mlflow.get_artifact_uri()}")
-
     run = mlflow.active_run()
     print(f"run_id: {run.info.run_id}; status: {run.info.status}")
 
+    mlflow.tensorflow.autolog(every_n_iter=2)
     start_training = time.time()
     history = model.fit(tfr_dataset,
               epochs=30, verbose=1)
@@ -252,9 +235,7 @@ def main():
     mlflow.log_metric('training_accuracy', history.history['sparse_categorical_accuracy'][-1])
     mlflow.log_metric('training_loss', history.history['loss'][-1])
     mlflow.log_metric('training_time', training_time)
-    mlflow.log_artifacts("./model", artifact_path=ARTIFACTS_PATH)
-
-    # mlflow.log_artifacts(ARTIFACTS_PATH)
+    # mlflow.log_artifacts(model, artifact_path=artifact_uri)
 
     tfr_testdata = get_dataset(VALID_FILENAMES)
 
@@ -268,7 +249,6 @@ def main():
     mlflow.log_metric('validation_accuracy', val_accuracy)
     mlflow.log_metric('validation_loss', val_loss)
     mlflow.log_metric('evaluating_time', evaluating_time)
-    # mlflow.log_artifact("./model", artifact_path=ARTIFACTS_PATH)
 
     run = mlflow.get_run(run.info.run_id)
     print(f"run_id: {run.info.run_id}; status: {run.info.status}")
