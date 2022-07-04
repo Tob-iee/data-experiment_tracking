@@ -252,7 +252,9 @@ def main():
     mlflow.log_metric('training_accuracy', history.history['sparse_categorical_accuracy'][-1])
     mlflow.log_metric('training_loss', history.history['loss'][-1])
     mlflow.log_metric('training_time', training_time)
-    mlflow.log_artifact("./model", artifact_path=ARTIFACTS_PATH)
+    # mlflow.log_artifact("./model", artifact_path=ARTIFACTS_PATH)
+
+    mlflow.log_artifact(f"{args.arti}/model")
 
     tfr_testdata = get_dataset(VALID_FILENAMES)
 
