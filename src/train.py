@@ -184,9 +184,6 @@ def main():
   search_exp = client.get_experiment_by_name(EXPERIMENT_NAME)
   print(client_list)
 
-  artifact_uri = mlflow.get_artifact_uri()
-  print(f"The artifacts uri is: {artifact_uri()}")
-
   if search_exp == None:
     # create and set experiment
     experiment_new = mlflow.create_experiment(EXPERIMENT_NAME, artifact_location=artifact_uri)
@@ -212,7 +209,6 @@ def main():
     print("Please check your experiment name it might have been deleted")
 
 
-
   model = get_cnn()
   model.summary()
 
@@ -223,6 +219,10 @@ def main():
 
     run = mlflow.active_run()
     print(f"run_id: {run.info.run_id}; status: {run.info.status}")
+
+    artifact_uri = mlflow.get_artifact_uri()
+    print(f"The artifacts uri is: {artifact_uri}")
+
 
     start_training = time.time()
     history = model.fit(tfr_dataset,
