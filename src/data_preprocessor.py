@@ -1,6 +1,8 @@
 # import the necessary packages
 import os
+import wget
 import argparse
+from zipfile import ZipFile
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
@@ -129,7 +131,29 @@ def convert_to_dict(FILE_PATH, annotations):
     dataset = dataset.to_dict(orient='records')
     return dataset
 
+
+def data_source(url):
+    # Define the remote file to retrieve
+    remote_url = url
+    # Define the local filename to save data
+    local_dir = './data_store/data/American Sign Language Letters.v1-v1.tensorflow'
+    # Make http request for remote file data
+    file = wget.download(remote_url)
+    # Create a ZipFile Object and load sample.zip in it
+    with ZipFile(f'{file}', 'r') as zipObj:
+    # Extract all the contents of zip file in current directory
+        zipObj.extractall(local_dir)
+
+    os.remove(file)
+
+
+
+
 def main():
+
+    url ='https://public.roboflow.com/ds/NCbDlihA4z?key=pcdffiYbus'
+    data_source(url)
+
     for splits in args.datasplit:
 
         FILE_PATH = args.datapath + splits
@@ -145,4 +169,3 @@ if __name__ ==  '__main__':
     main()
     # python src/data_preprocessor.py -s train test valid -o "./data_store/data_x/American Sign Language Letters.v1-v1.tfrecord"
 
-    
