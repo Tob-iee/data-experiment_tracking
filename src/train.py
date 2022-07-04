@@ -254,7 +254,7 @@ def main():
     mlflow.log_metric('training_time', training_time)
     # mlflow.log_artifact("./model", artifact_path=ARTIFACTS_PATH)
 
-    mlflow.log_artifact(f"{args.arti}/model")
+    mlflow.log_artifact(args.arti)
 
     tfr_testdata = get_dataset(VALID_FILENAMES)
 
