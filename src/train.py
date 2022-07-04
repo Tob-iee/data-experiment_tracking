@@ -189,6 +189,11 @@ def main():
   tfr_testdata = get_dataset(VALID_FILENAMES)
   print(tfr_testdata)
 
+  # output_dest =os.path.join(output_path, data_split)
+  # output_dest = os.path.dirname(f"{out_path_join}")
+  if not os.path.exists(args.arti):
+      # Create artifacts directory because it does not exist
+      os.makedirs(args.arti)
 
   model = get_cnn()
   model.summary()
