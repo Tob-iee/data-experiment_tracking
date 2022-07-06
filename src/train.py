@@ -177,8 +177,6 @@ def main():
 
   # if DAGSHUB_TRAINING == "True":
   # # Set MLflow tracking remote server using Dagshub Mlflow server URI
-  #   os.environ['MLFLOW_TRACKING_USERNAME'] = DAGSHUB_REPO_OWNER
-  #   os.environ['MLFLOW_TRACKING_PASSWORD'] = DAGSHUB_REPO_NAME
     # mlflow.set_tracking_uri("https://dagshub.com/{DAGSHUB_REPO_OWNER}/{DAGSHUB_REPO_NAME}.mlflow")
 
   mlflow.set_tracking_uri(URI)
@@ -189,9 +187,9 @@ def main():
   tfr_testdata = get_dataset(VALID_FILENAMES)
   print(tfr_testdata)
 
-  if not os.path.exists(args.arti):
+  # if not os.path.exists(args.arti):
     # Create artifacts directory because it does not exist
-    os.makedirs(args.arti)
+    # os.makedirs(args.arti)
 
   print(f"The tracking uri is: {mlflow.get_tracking_uri()}")
 
