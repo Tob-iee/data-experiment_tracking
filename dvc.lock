@@ -1,0 +1,24 @@
+schema: '2.0'
+stages:
+  ELT:
+    cmd: python src/data_preprocessor.py -s train test valid -o "./data_store/data/American
+      Sign Language Letters.v1-v1.tfrecord"
+    deps:
+    - path: src/data_preprocessor.py
+      md5: 31d8ff9c123bf176c1fbcc40e011d252
+      size: 5663
+    outs:
+    - path: ./data_store/data/American Sign Language Letters.v1-v1.tfrecord
+      md5: cada0570530a8a32f6180b0595680c7c.dir
+      size: 42577489
+      nfiles: 3
+  feature_tranform-train:
+    cmd: python src/train.py -dt True
+    deps:
+    - path: ./data_store/data/American Sign Language Letters.v1-v1.tfrecord/
+      md5: cada0570530a8a32f6180b0595680c7c.dir
+      size: 42577489
+      nfiles: 3
+    - path: src/train.py
+      md5: d22969a2fea351c397b432f7e3c43648
+      size: 9544
