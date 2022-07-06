@@ -51,6 +51,8 @@ parser.add_argument("-dt",
 # parse the arguments
 args = parser.parse_args()
 
+URI = os.environ.get('MLFLOW_TRACKING_URI')
+
 AUTOTUNE = tf.data.AUTOTUNE
 BATCH_SIZE = 32
 
@@ -177,7 +179,9 @@ def main():
   # # Set MLflow tracking remote server using Dagshub Mlflow server URI
   #   os.environ['MLFLOW_TRACKING_USERNAME'] = DAGSHUB_REPO_OWNER
   #   os.environ['MLFLOW_TRACKING_PASSWORD'] = DAGSHUB_REPO_NAME
-  #   mlflow.set_tracking_uri("https://dagshub.com/{DAGSHUB_REPO_OWNER}/{DAGSHUB_REPO_NAME}.mlflow")
+    # mlflow.set_tracking_uri("https://dagshub.com/{DAGSHUB_REPO_OWNER}/{DAGSHUB_REPO_NAME}.mlflow")
+
+  mlflow.set_tracking_uri(URI)
 
   tfr_dataset = get_dataset(TRAINING_FILENAMES)
   print(tfr_dataset)
