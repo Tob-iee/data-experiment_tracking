@@ -176,10 +176,6 @@ def get_cnn():
 
 def main():
 
-  # if DAGSHUB_TRAINING == "True":
-  # # Set MLflow tracking remote server using Dagshub Mlflow server URI
-    # mlflow.set_tracking_uri("https://dagshub.com/{DAGSHUB_REPO_OWNER}/{DAGSHUB_REPO_NAME}.mlflow")
-
   mlflow.set_tracking_uri(URI)
 
   tfr_dataset = get_dataset(TRAINING_FILENAMES)
@@ -188,9 +184,9 @@ def main():
   tfr_testdata = get_dataset(VALID_FILENAMES)
   print(tfr_testdata)
 
-  # if not os.path.exists(args.arti):
+  if not os.path.exists(args.arti):
     # Create artifacts directory because it does not exist
-    # os.makedirs(args.arti)
+    os.makedirs(args.arti)
 
   print(f"The tracking uri is: {mlflow.get_tracking_uri()}")
 
@@ -272,21 +268,11 @@ def main():
   print("--")
   mlflow.end_run()
 
-  shutil.copytree(f"./{artifact_uri}/{experiment.experiment_id}/{run.info.run_id}", f"{LOCAL_ARTIFACTS_PATH}/{experiment.experiment_id}/{run.info.run_id}")
+  shutil.copytree(artifact_uri, f"{LOCAL_ARTIFACTS_PATH}/{experiment.experiment_id}/{run.info.run_id}")
 
   # Check for any active runs
   print(f"Active run: {mlflow.active_run()}")
 
-
-# !dvc add data_store/artifacts/{runid}
-
-# !git add data_store.dvc
-
-# !git commit -m "Added artifacts to data_store"
-
-# !dvc push -r origin
-
-# !git push
 
 if __name__ ==  '__main__':
   main()
