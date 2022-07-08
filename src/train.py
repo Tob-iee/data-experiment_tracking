@@ -272,7 +272,7 @@ def main():
   print("--")
   mlflow.end_run()
 
-  shutil.copytree(f"./artifacts/{experiment.experiment_id}/{run.info.run_id}", f"LOCAL_ARTIFACTS_PATH/{experiment.experiment_id}/{run.info.run_id}")
+  shutil.copytree(f"./{artifact_uri}/{experiment.experiment_id}/{run.info.run_id}", f"{LOCAL_ARTIFACTS_PATH}/{experiment.experiment_id}/{run.info.run_id}")
 
   # Check for any active runs
   print(f"Active run: {mlflow.active_run()}")
