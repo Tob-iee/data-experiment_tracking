@@ -1,5 +1,6 @@
 import os
 import time
+import shutil
 import argparse
 import tensorflow as tf
 import mlflow
@@ -58,7 +59,7 @@ BATCH_SIZE = 32
 
 FILENAMES_PATH = args.datapath
 EXPERIMENT_NAME = args.exp_name
-ARTIFACTS_PATH = args.arti
+LOCAL_ARTIFACTS_PATH = args.arti
 DAGSHUB_TRAINING = args.dagshub_train
 
 TRAINING_FILENAMES =  FILENAMES_PATH + args.datasplit[0] + "/letters.tfrecords"
@@ -201,7 +202,7 @@ def main():
 
   if search_exp == None:
     # create and set experiment
-    experiment_new = mlflow.create_experiment(EXPERIMENT_NAME,artifact_location=ARTIFACTS_PATH)
+    experiment_new = mlflow.create_experiment(EXPERIMENT_NAME)
     client.set_experiment_tag(experiment_new, "CV.framework", "Tensorflow_CV")
     experiment = client.get_experiment(experiment_new)
     print("Name: {}".format(experiment.name))
@@ -270,6 +271,8 @@ def main():
   print(f"run_id: {run.info.run_id}; status: {run.info.status}")
   print("--")
   mlflow.end_run()
+
+  shutil.copytree(f"./artifacts/{experiment.experiment_id}/{run.info.run_id}", f"LOCAL_ARTIFACTS_PATH/{experiment.experiment_id}/{run.info.run_id}")
 
   # Check for any active runs
   print(f"Active run: {mlflow.active_run()}")
