@@ -11,5 +11,3 @@ stages:
     deps:
     - ./data_store/data/American Sign Language Letters.v1-v1.tfrecord/
     - src/train.py
-    outs:
-    - ./data_store/artifacts

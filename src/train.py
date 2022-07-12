@@ -184,9 +184,9 @@ def main():
   tfr_testdata = get_dataset(VALID_FILENAMES)
   print(tfr_testdata)
 
-  if not os.path.exists(args.arti):
+  # if not os.path.exists(args.arti):
     # Create artifacts directory because it does not exist
-    os.makedirs(args.arti)
+    # os.makedirs(args.arti)
 
   print(f"The tracking uri is: {mlflow.get_tracking_uri()}")
 
@@ -248,7 +248,6 @@ def main():
   mlflow.log_metric('training_accuracy', history.history['sparse_categorical_accuracy'][-1])
   mlflow.log_metric('training_loss', history.history['loss'][-1])
   mlflow.log_metric('training_time', training_time)
-  # mlflow.log_artifacts(model, artifact_path=artifact_uri)
 
   tfr_testdata = get_dataset(VALID_FILENAMES)
 
@@ -267,8 +266,6 @@ def main():
   print(f"run_id: {run.info.run_id}; status: {run.info.status}")
   print("--")
   mlflow.end_run()
-
-  shutil.copytree(artifact_uri, f"{LOCAL_ARTIFACTS_PATH}/{experiment.experiment_id}/{run.info.run_id}")
 
   # Check for any active runs
   print(f"Active run: {mlflow.active_run()}")
